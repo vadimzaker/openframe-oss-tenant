@@ -15,32 +15,53 @@ http {
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;
     
+    # Enhanced logging formats for better debugging
     log_format main '$remote_addr - $remote_user [$time_local] "$request" '
                     '$status $body_bytes_sent "$http_referer" '
                     '"$http_user_agent" "$http_x_forwarded_for" '
-                    'fastcgi_params: "$fastcgi_script_name $fastcgi_path_info" '
-                    'fastcgi_error: "$upstream_http_x_error"';
+                    'rt=$request_time '
+                    'uct="$upstream_connect_time" '
+                    'uht="$upstream_header_time" '
+                    'urt="$upstream_response_time"';
     
-    log_format debug_fcgi '$remote_addr - $remote_user [$time_local] "$request" '
-                         '$status $body_bytes_sent "$http_referer" '
-                         'fastcgi_script: "$fastcgi_script_name" '
-                         'fastcgi_path_info: "$fastcgi_path_info" '
-                         'upstream_status: "$upstream_status" '
-                         'upstream_response_time: "$upstream_response_time" '
-                         'upstream_error: "$upstream_http_x_error"';
+    log_format api_debug '[$time_local] API_REQUEST: $remote_addr "$request" '
+                        '$status $body_bytes_sent '
+                        'fastcgi_script: "$fastcgi_script_name" '
+                        'fastcgi_path_info: "$fastcgi_path_info" '
+                        'content_type: "$content_type" '
+                        'content_length: "$content_length" '
+                        'request_time: $request_time '
+                        'upstream_status: "$upstream_status" '
+                        'upstream_response_time: "$upstream_response_time" '
+                        'fastcgi_error: "$upstream_http_x_error"';
     
-    log_format proxy_debug '[$time_local] $remote_addr - $remote_user '
-                          '"$request" $status $body_bytes_sent '
-                          '"$http_referer" "$http_user_agent" '
-                          'upstream_addr: "$upstream_addr" '
-                          'upstream_uri: "$uri" '
-                          'proxy_host: "$proxy_host" '
-                          'proxy_uri: "$proxy_mesh_url"';
+    log_format websocket_debug '[$time_local] WEBSOCKET: $remote_addr "$request" '
+                              '$status $body_bytes_sent '
+                              'upgrade: "$http_upgrade" '
+                              'connection: "$http_connection" '
+                              'proxy_url: "$proxy_mesh_url" '
+                              'upstream_addr: "$upstream_addr" '
+                              'upstream_status: "$upstream_status" '
+                              'upstream_connect_time: "$upstream_connect_time" '
+                              'upstream_header_time: "$upstream_header_time" '
+                              'upstream_response_time: "$upstream_response_time" '
+                              'bytes_sent: $bytes_sent '
+                              'bytes_received: $request_length';
     
+    log_format default_proxy '[$time_local] DEFAULT_PROXY: $remote_addr "$request" '
+                            '$status $body_bytes_sent '
+                            'upstream_addr: "$upstream_addr" '
+                            'upstream_uri: "$uri" '
+                            'proxy_host: "$proxy_host" '
+                            'request_time: $request_time '
+                            'upstream_response_time: "$upstream_response_time"';
+    
+    # Multiple access logs for different purposes - all to stdout
     access_log /dev/stdout main;
-    access_log /dev/stdout debug_fcgi;
-    access_log /dev/stdout proxy_debug;
-    error_log  /dev/stderr debug;
+    access_log /dev/stdout api_debug;
+    access_log /dev/stdout websocket_debug;
+    access_log /dev/stdout default_proxy;
+    error_log  /dev/stderr info;
     
     sendfile on;
     
@@ -83,19 +104,35 @@ http {
             }
             set $proxy_mesh_url "https://${MESH_NGINX_HOST}:${MESH_EXTERNAL_PORT}/$target_path$is_args$args${query_sep}user=${MESH_USER}&pass=${MESH_PASS}";
             
+            # Enhanced logging for WebSocket connections
+            access_log /dev/stdout websocket_debug;
+            error_log /dev/stderr info;
+            
             # Define proxy configuration
             proxy_pass $proxy_mesh_url;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "upgrade";
             proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
 
             proxy_connect_timeout 60;
             proxy_read_timeout 3600;
+            proxy_send_timeout 3600;
+            
+            # Buffer settings for WebSocket
+            proxy_buffering off;
+            proxy_request_buffering off;
         }
         
         # Unified API endpoint
         location /api/ {
+            # Enhanced logging for API requests
+            access_log /dev/stdout api_debug;
+            error_log /dev/stderr info;
+            
             include fastcgi_params;
             fastcgi_param SCRIPT_FILENAME ${MESH_DIR}/nginx-api/meshcentral-api.sh;
             fastcgi_param SCRIPT_NAME /api;
@@ -113,6 +150,52 @@ http {
             fastcgi_pass unix:/var/run/fcgiwrap.socket;
             fastcgi_buffering off;
             fastcgi_request_buffering off;
+            
+            # Additional FastCGI settings for better debugging
+            fastcgi_intercept_errors on;
+            fastcgi_ignore_client_abort off;
         }
+        
+        # Default proxy for all other requests to MeshCentral
+        location / {
+            # Enhanced logging for default proxy requests
+            access_log /dev/stdout default_proxy;
+            error_log /dev/stderr info;
+            
+            # Proxy to MeshCentral server
+            proxy_pass https://${MESH_NGINX_HOST}:${MESH_EXTERNAL_PORT};
+            proxy_http_version 1.1;
+            
+            # Standard proxy headers
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Host $server_name;
+            
+            # WebSocket support
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            
+            # Timeout settings
+            proxy_connect_timeout 60;
+            proxy_send_timeout 300;
+            proxy_read_timeout 300;
+            
+            # Buffer settings
+            proxy_buffering on;
+            proxy_buffer_size 128k;
+            proxy_buffers 4 256k;
+            proxy_busy_buffers_size 256k;
+            
+            # Handle redirects
+            proxy_redirect off;
+        }
+    }
+    
+    # WebSocket connection upgrade mapping
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        '' close;
     }
 }
