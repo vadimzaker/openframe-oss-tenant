@@ -1,9 +1,9 @@
 package dev
 
 import (
-	"github.com/flamingo/openframe/internal/dev/models"
-	"github.com/flamingo/openframe/internal/dev/prerequisites"
-	"github.com/flamingo/openframe/internal/shared/ui"
+	"flamingo.run/openframe-cli/internal/dev/models"
+	"flamingo.run/openframe-cli/internal/dev/prerequisites"
+	"flamingo.run/openframe-cli/internal/shared/ui"
 	"github.com/spf13/cobra"
 )
 

@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	"github.com/flamingo/openframe/internal/chart/models"
+	"flamingo.run/openframe-cli/internal/chart/models"
 	"github.com/stretchr/testify/assert"
 )
 

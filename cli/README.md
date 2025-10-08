@@ -17,7 +17,7 @@ A modern CLI tool for managing OpenFrame Kubernetes clusters and development wor
 ```bash
 # Clone and build
 git clone <repository-url>
-cd openframe/cli
+cd cli
 
 # Build the CLI
 make build

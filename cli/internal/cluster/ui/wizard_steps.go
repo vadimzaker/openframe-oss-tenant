@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/flamingo/openframe/internal/cluster/models"
-	sharedUI "github.com/flamingo/openframe/internal/shared/ui"
+	"flamingo.run/openframe-cli/internal/cluster/models"
+	sharedUI "flamingo.run/openframe-cli/internal/shared/ui"
 	"github.com/manifoldco/promptui"
 	"github.com/pterm/pterm"
 )
@@ -72,8 +72,8 @@ func (ws *WizardSteps) PromptClusterType() (models.ClusterType, error) {
 // PromptNodeCount prompts for number of worker nodes
 func (ws *WizardSteps) PromptNodeCount(defaultCount int) (int, error) {
 	prompt := promptui.Prompt{
-		Label:   "Number of Worker Nodes",
-		Default: strconv.Itoa(defaultCount),
+		Label:    "Number of Worker Nodes",
+		Default:  strconv.Itoa(defaultCount),
 		Validate: sharedUI.ValidateIntRange(1, 10, "node count"),
 	}
 

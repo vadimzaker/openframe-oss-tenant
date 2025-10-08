@@ -3,9 +3,9 @@ package dev
 import (
 	"context"
 
-	"github.com/flamingo/openframe/internal/dev/models"
-	scaffoldService "github.com/flamingo/openframe/internal/dev/services/scaffold"
-	"github.com/flamingo/openframe/internal/shared/executor"
+	"flamingo.run/openframe-cli/internal/dev/models"
+	scaffoldService "flamingo.run/openframe-cli/internal/dev/services/scaffold"
+	"flamingo.run/openframe-cli/internal/shared/executor"
 	"github.com/spf13/cobra"
 )
 
@@ -47,6 +47,8 @@ Examples:
 	cmd.Flags().StringVar(&flags.SyncRemote, "sync-remote", "", "Remote directory to sync files to")
 	cmd.Flags().BoolVar(&flags.SkipBootstrap, "skip-bootstrap", false, "Skip bootstrapping cluster")
 	cmd.Flags().StringVar(&flags.HelmValuesFile, "helm-values", "", "Custom Helm values file for bootstrap")
+	cmd.Flags().StringVar(&flags.GithubActor, "github-actor", "", "GitHub username for Maven authentication")
+	cmd.Flags().StringVar(&flags.GithubToken, "github-token", "", "GitHub personal access token for Maven authentication")
 
 	return cmd
 }
@@ -63,4 +65,3 @@ func runScaffold(cmd *cobra.Command, args []string, flags *models.ScaffoldFlags)
 
 	return service.RunScaffoldWorkflow(ctx, args, flags)
 }
-

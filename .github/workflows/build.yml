@@ -48,20 +48,14 @@ jobs:
   matrix:
     name: Generate Matrix
     uses: ./.github/workflows/matrix.yml
-    if: |
-      github.event_name == 'workflow_call' ||
-      github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'push'
+    if: (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
 
 
   build_images:
     name: "Build: ${{ matrix.name }}"
     needs: [matrix, changes]
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'workflow_call' ||
-      github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'push'
+    if: (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
     strategy:
       fail-fast: false
       matrix:
@@ -69,7 +63,6 @@ jobs:
     steps:
       - name: Checkout
         if: |
-          github.event_name == 'workflow_call' ||
           github.event_name == 'workflow_dispatch' ||
           (github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
         uses: actions/checkout@v4
@@ -82,8 +75,7 @@ jobs:
 
       - name: Update pom.xml with lib version
         if: |
-          (github.event_name == 'workflow_call' || github.event_name == 'workflow_dispatch') &&
-          inputs.version != ''
+          (github.event_name == 'workflow_dispatch') && inputs.version != ''
         run: |
           VERSION="${{ inputs.version }}"
           echo "Updating openframe.libs.version to: $VERSION"
@@ -100,8 +92,7 @@ jobs:
 
       - name: Log in to GitHub Container Registry
         if: |
-          (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') || 
-          (github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
+          (github.event_name == 'workflow_dispatch' || github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -110,22 +101,19 @@ jobs:
 
       - name: Set up QEMU
         if: |
-          (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') || 
-          (github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
+          (github.event_name == 'workflow_dispatch' || github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
         uses: docker/setup-qemu-action@v3
         with:
           platforms: ${{ matrix.name == 'fleetmdm' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
 
       - name: Set up Docker Buildx
         if: |
-          (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') || 
-          (github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
+          (github.event_name == 'workflow_dispatch' || github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
         uses: docker/setup-buildx-action@v3
 
       - name: Generate metadata
         if: |
-          (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') || 
-          (github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
+          (github.event_name == 'workflow_dispatch' || github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -146,8 +134,7 @@ jobs:
 
       - name: Format build arguments
         if: |
-          (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') || 
-          (github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
+          (github.event_name == 'workflow_dispatch' || github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
         id: format_args
         uses: flamingo-stack/openframe-oss-tenant/.github/steps/docker-format-build-args@ami/ci
         with:
@@ -157,8 +144,7 @@ jobs:
 
       - name: Build and push image
         if: |
-          (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') || 
-          (github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
+          (github.event_name == 'workflow_dispatch' || github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true'))
         id: docker_build
         uses: docker/build-push-action@v6
         with:
@@ -171,14 +157,15 @@ jobs:
           sbom: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
           build-args: |
             GITHUB_ACTOR=${{ github.actor }}
-            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
             ${{ env.BUILD_ARGS }}
 
       - name: Cleanup old container versions
         if: |
-          (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') || 
+          (github.event_name == 'workflow_dispatch') || 
           (github.event_name == 'push' && contains(needs.changes.outputs[matrix.name], 'true')) && 
           steps.docker_build.outcome == 'success'
         uses: dataaxiom/ghcr-cleanup-action@v1
@@ -196,7 +183,9 @@ jobs:
     env:
       CARGO_INCREMENTAL: 0
       BINARY_NAME: openframe
-    if: (github.event_name == 'workflow_dispatch' || github.event_name == 'push') && contains(needs.changes.outputs.client, 'true')
+    if: |
+      (github.event_name == 'workflow_dispatch') || 
+      (github.event_name == 'push' && contains(needs.changes.outputs.client, 'true'))
     defaults:
       run:
         shell: bash
@@ -293,7 +282,7 @@ jobs:
     name: "Build Helm Chart"
     needs: [matrix, changes]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.version != '')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -305,107 +294,111 @@ jobs:
         uses: appany/helm-oci-chart-releaser@v0.5.0
         with:
           name: app-of-apps
-          tag: 0.1.1
+          tag: ${{ inputs.version != '' && github.event.inputs.version || 'latest' }}
           path: ./manifests/app-of-apps
           registry: ${{ env.REGISTRY }}
           repository: ${{ env.ORGANISATION }}/${{ env.REPOSITORY }}
           registry_username: ${{ github.actor }}
           registry_password: ${{ secrets.GITHUB_TOKEN }}
 
-  release:
-    name: "Create Release"
-    needs: [ build_client, build_images, matrix, changes ]
+  build_openframe_cli:
+    name: "Build OpenFrame Go CLI"
+    needs: [changes, build_client]
     runs-on: ubuntu-latest
-    if: (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') && inputs.version != ''
+    if: |
+      (github.event_name == 'workflow_dispatch' && inputs.version != '') ||
+      (github.event_name == 'push' && contains(needs.changes.outputs.cli, 'true'))
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Download all artifacts
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      # Download Rust client artifacts
+      - name: Download macOS client
+        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
         uses: actions/download-artifact@v4
         with:
-          path: release-artifacts
-        continue-on-error: true
+          name: openframe-oss-client-macos-universal
+          path: artifacts/openframe-macos/
 
-      - name: Display artifact structure
-        run: |
-          if [ -d "release-artifacts" ]; then
-            echo "Downloaded artifacts:"
-            ls -R release-artifacts/
-          else
-            echo "No artifacts directory found"
-          fi
-
-      - name: Prepare release artifacts
-        run: |
-          mkdir -p final-artifacts/client
-
-          # Copy client binaries
-          if [ -d "release-artifacts" ]; then
-            find release-artifacts -type f \( -name "openframe" -o -name "openframe.exe" \) \
-              -exec cp {} final-artifacts/client/ \;
-          fi
-
-          echo "Final artifacts to release:"
-          echo "=== Client artifacts ==="
-          ls -lh final-artifacts/client/ 2>/dev/null || echo "No client artifacts"
-
-      - name: Generate Docker image list
-        id: docker_images
-        run: |
-          MATRIX='${{ needs.matrix.outputs.matrix }}'
-          TAG="${{ github.event.inputs.version }}"
-
-          IMAGE_LIST=$(echo "$MATRIX" | jq -r --arg registry "$REGISTRY" \
-            --arg org "$ORGANISATION" \
-            --arg repo "$REPOSITORY" \
-            --arg tag "$TAG" \
-            '.[] | "- `\($registry)/\($org)/\($repo)/\(.name):\($tag)`"' | tr '\n' '\n')
-
-          PULL_COMMANDS=$(echo "$MATRIX" | jq -r --arg registry "$REGISTRY" \
-            --arg org "$ORGANISATION" \
-            --arg repo "$REPOSITORY" \
-            --arg tag "$TAG" \
-            '.[] | "docker pull \($registry)/\($org)/\($repo)/\(.name):\($tag)"' | tr '\n' '\n')
-
-          {
-            echo "images<<EOF"
-            echo "$IMAGE_LIST"
-            echo "EOF"
-            echo "pull_commands<<EOF"
-            echo "$PULL_COMMANDS"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-        env:
-          REGISTRY: ${{ env.REGISTRY }}
-          ORGANISATION: ${{ env.ORGANISATION }}
-          REPOSITORY: ${{ env.REPOSITORY }}
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+      - name: Download Windows client
+        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+        uses: actions/download-artifact@v4
         with:
-          tag_name: ${{ github.event.inputs.version }}
-          name: Release ${{ github.event.inputs.version }}
-          draft: false
-          prerelease: false
-          files: |
-            final-artifacts/client/*
-          token: ${{ secrets.GITHUB_TOKEN }}
-          body: |
-            Release ${{ github.event.inputs.version }}
+          name: openframe-oss-client-windows-x64
+          path: artifacts/openframe-windows/
 
-            Built from commit: ${{ github.sha }}
+      - name: Verify artifacts
+        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+        run: |
+          echo "=== Artifact Structure ==="
+          ls -R artifacts/
+          echo "=== macOS Binary ==="
+          if [ -f artifacts/openframe-macos/openframe ]; then
+            file artifacts/openframe-macos/openframe
+            ls -lh artifacts/openframe-macos/openframe
+          fi
+          echo "=== Windows Binary ==="
+          if [ -f artifacts/openframe-windows/openframe.exe ]; then
+            file artifacts/openframe-windows/openframe.exe
+            ls -lh artifacts/openframe-windows/openframe.exe
+          fi
 
-            ## 🦀 Client Binaries
-            - **macOS** (Universal): `openframe` (ARM64 + x86_64)
-            - **Windows** (x64): `openframe.exe`
+      - name: Install GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          install-only: true
 
-            ## 🐳 Docker Images
+      - name: Run GoReleaser (release)
+        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git tag -f ${{ inputs.version }}
+          goreleaser release --clean
 
-            **Available images:**
-            ${{ steps.docker_images.outputs.images }}
+      - name: Upload Go CLI artifacts
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: openframe-cli-binaries
+          path: dist/*.tar.gz
 
-            **Pull commands:**
-            ```bash
-            ${{ steps.docker_images.outputs.pull_commands }}
-            ```
+#  release:
+#      - name: Generate Docker image list
+#        id: docker_images
+#        run: |
+#          MATRIX='${{ needs.matrix.outputs.matrix }}'
+#          TAG="${{ github.event.inputs.version }}"
+#
+#          IMAGE_LIST=$(echo "$MATRIX" | jq -r --arg registry "$REGISTRY" \
+#            --arg org "$ORGANISATION" \
+#            --arg repo "$REPOSITORY" \
+#            --arg tag "$TAG" \
+#            '.[] | "- `\($registry)/\($org)/\($repo)/\(.name):\($tag)`"' | tr '\n' '\n')
+#
+#          PULL_COMMANDS=$(echo "$MATRIX" | jq -r --arg registry "$REGISTRY" \
+#            --arg org "$ORGANISATION" \
+#            --arg repo "$REPOSITORY" \
+#            --arg tag "$TAG" \
+#            '.[] | "docker pull \($registry)/\($org)/\($repo)/\(.name):\($tag)"' | tr '\n' '\n')
+#
+#          {
+#            echo "images<<EOF"
+#            echo "$IMAGE_LIST"
+#            echo "EOF"
+#            echo "pull_commands<<EOF"
+#            echo "$PULL_COMMANDS"
+#            echo "EOF"
+#          } >> "$GITHUB_OUTPUT"
+#        env:
+#          REGISTRY: ${{ env.REGISTRY }}
+#          ORGANISATION: ${{ env.ORGANISATION }}
+#          REPOSITORY: ${{ env.REPOSITORY }}
+

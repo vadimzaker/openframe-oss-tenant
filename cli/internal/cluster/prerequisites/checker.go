@@ -2,10 +2,10 @@ package prerequisites
 
 import (
 	"strings"
-	
-	"github.com/flamingo/openframe/internal/cluster/prerequisites/docker"
-	"github.com/flamingo/openframe/internal/cluster/prerequisites/k3d"
-	"github.com/flamingo/openframe/internal/cluster/prerequisites/kubectl"
+
+	"flamingo.run/openframe-cli/internal/cluster/prerequisites/docker"
+	"flamingo.run/openframe-cli/internal/cluster/prerequisites/k3d"
+	"flamingo.run/openframe-cli/internal/cluster/prerequisites/kubectl"
 )
 
 type PrerequisiteChecker struct {
@@ -26,7 +26,7 @@ func NewPrerequisiteChecker() *PrerequisiteChecker {
 				Name:        "Docker",
 				Command:     "docker",
 				IsInstalled: func() bool { return docker.IsDockerRunning() },
-				InstallHelp: func() string { 
+				InstallHelp: func() string {
 					if !docker.NewDockerInstaller().IsInstalled() {
 						return docker.NewDockerInstaller().GetInstallHelp()
 					}
@@ -77,7 +77,6 @@ func (pc *PrerequisiteChecker) GetInstallInstructions(missingTools []string) []s
 
 	return instructions
 }
-
 
 func CheckPrerequisites() error {
 	installer := NewInstaller()

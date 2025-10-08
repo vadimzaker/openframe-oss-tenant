@@ -7,11 +7,11 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/flamingo/openframe/internal/cluster/prerequisites/docker"
-	"github.com/flamingo/openframe/internal/cluster/prerequisites/k3d"
-	"github.com/flamingo/openframe/internal/cluster/prerequisites/kubectl"
-	"github.com/flamingo/openframe/internal/shared/errors"
-	"github.com/flamingo/openframe/internal/shared/ui"
+	"flamingo.run/openframe-cli/internal/cluster/prerequisites/docker"
+	"flamingo.run/openframe-cli/internal/cluster/prerequisites/k3d"
+	"flamingo.run/openframe-cli/internal/cluster/prerequisites/kubectl"
+	"flamingo.run/openframe-cli/internal/shared/errors"
+	"flamingo.run/openframe-cli/internal/shared/ui"
 	"github.com/pterm/pterm"
 )
 

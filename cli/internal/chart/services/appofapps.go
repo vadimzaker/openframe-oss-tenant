@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/flamingo/openframe/internal/chart/models"
-	"github.com/flamingo/openframe/internal/chart/providers/git"
-	"github.com/flamingo/openframe/internal/chart/providers/helm"
-	"github.com/flamingo/openframe/internal/chart/utils/config"
-	"github.com/flamingo/openframe/internal/chart/utils/errors"
-	sharedErrors "github.com/flamingo/openframe/internal/shared/errors"
+	"flamingo.run/openframe-cli/internal/chart/models"
+	"flamingo.run/openframe-cli/internal/chart/providers/git"
+	"flamingo.run/openframe-cli/internal/chart/providers/helm"
+	"flamingo.run/openframe-cli/internal/chart/utils/config"
+	"flamingo.run/openframe-cli/internal/chart/utils/errors"
+	sharedErrors "flamingo.run/openframe-cli/internal/shared/errors"
 	"github.com/pterm/pterm"
 )
 

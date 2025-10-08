@@ -148,7 +148,7 @@ func (e *RealCommandExecutor) ExecuteWithOptions(ctx context.Context, options Ex
 			}
 		}
 		
-		return result, fmt.Errorf("command failed: %s (exit code: %d): %w", redactSensitiveInfo(fullCommand), result.ExitCode, err)
+		return result, fmt.Errorf("command failed: %s (exit code: %d): %w", fullCommand, result.ExitCode, err)
 	}
 	
 	result.ExitCode = 0
@@ -168,4 +168,19 @@ func (e *RealCommandExecutor) buildEnvStrings(env map[string]string) []string {
 		envStrings = append(envStrings, fmt.Sprintf("%s=%s", key, value))
 	}
 	return envStrings
+}
+
+// redactSensitiveInfo redacts sensitive information from command strings for logging
+func redactSensitiveInfo(command string) string {
+	// Redact common sensitive patterns like tokens, passwords, keys
+	sensitivePatterns := []string{"token", "password", "secret", "key", "auth"}
+	
+	for _, pattern := range sensitivePatterns {
+		if strings.Contains(strings.ToLower(command), pattern) {
+			// Simple redaction - just indicate that sensitive info was present
+			return "[REDACTED - contains sensitive information]"
+		}
+	}
+	
+	return command
 }

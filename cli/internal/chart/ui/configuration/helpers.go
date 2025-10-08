@@ -3,7 +3,7 @@ package configuration
 import (
 	"fmt"
 
-	"github.com/flamingo/openframe/internal/chart/utils/types"
+	"flamingo.run/openframe-cli/internal/chart/utils/types"
 	"github.com/pterm/pterm"
 )
 

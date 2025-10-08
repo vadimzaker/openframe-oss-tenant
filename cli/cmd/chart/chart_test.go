@@ -3,7 +3,7 @@ package chart
 import (
 	"testing"
 
-	"github.com/flamingo/openframe/tests/testutil"
+	"flamingo.run/openframe-cli/tests/testutil"
 	"github.com/stretchr/testify/assert"
 )
 

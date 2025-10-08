@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	chartServices "github.com/flamingo/openframe/internal/chart/services"
-	utilTypes "github.com/flamingo/openframe/internal/chart/utils/types"
-	"github.com/flamingo/openframe/internal/cluster"
-	"github.com/flamingo/openframe/internal/cluster/models"
-	sharedErrors "github.com/flamingo/openframe/internal/shared/errors"
+	chartServices "flamingo.run/openframe-cli/internal/chart/services"
+	utilTypes "flamingo.run/openframe-cli/internal/chart/utils/types"
+	"flamingo.run/openframe-cli/internal/cluster"
+	"flamingo.run/openframe-cli/internal/cluster/models"
+	sharedErrors "flamingo.run/openframe-cli/internal/shared/errors"
 	"github.com/spf13/cobra"
 )
 

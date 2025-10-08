@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/flamingo/openframe/internal/chart/models"
-	"github.com/flamingo/openframe/internal/chart/utils/config"
-	"github.com/flamingo/openframe/internal/shared/executor"
+	"flamingo.run/openframe-cli/internal/chart/models"
+	"flamingo.run/openframe-cli/internal/chart/utils/config"
+	"flamingo.run/openframe-cli/internal/shared/executor"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -58,7 +58,7 @@ func TestHelmManager_InstallAppOfAppsFromLocal(t *testing.T) {
 			keyFile:     "/path/to/key.pem",
 			expectError: false,
 			setupMock: func(mockExec *MockExecutor) {
-				command := "helm upgrade --install app-of-apps /tmp/chart/manifests/app-of-apps --namespace argocd --wait --timeout 60m -f /path/to/values.yaml --set-file deployment.oss.ingress.localhost.tls.cert=/path/to/cert.pem --set-file deployment.oss.ingress.localhost.tls.key=/path/to/key.pem"
+				command := "helm upgrade --install app-of-apps /tmp/chart/manifests/app-of-apps --namespace argocd --wait --timeout 60m -f /path/to/values.yaml --set-file deployment.oss.ingress.localhost.tls.cert=/path/to/cert.pem --set-file deployment.oss.ingress.localhost.tls.key=/path/to/key.pem --set-file deployment.saas.ingress.localhost.tls.cert=/path/to/cert.pem --set-file deployment.saas.ingress.localhost.tls.key=/path/to/key.pem"
 				result := &executor.CommandResult{
 					ExitCode: 0,
 					Stdout:   "Release \"app-of-apps\" has been installed. Happy Helming!",
@@ -81,7 +81,7 @@ func TestHelmManager_InstallAppOfAppsFromLocal(t *testing.T) {
 			keyFile:     "/path/to/key.pem",
 			expectError: false,
 			setupMock: func(mockExec *MockExecutor) {
-				command := "helm upgrade --install app-of-apps /tmp/chart/manifests/app-of-apps --namespace argocd --wait --timeout 60m -f /path/to/values.yaml --set-file deployment.oss.ingress.localhost.tls.cert=/path/to/cert.pem --set-file deployment.oss.ingress.localhost.tls.key=/path/to/key.pem --dry-run"
+				command := "helm upgrade --install app-of-apps /tmp/chart/manifests/app-of-apps --namespace argocd --wait --timeout 60m -f /path/to/values.yaml --set-file deployment.oss.ingress.localhost.tls.cert=/path/to/cert.pem --set-file deployment.oss.ingress.localhost.tls.key=/path/to/key.pem --set-file deployment.saas.ingress.localhost.tls.cert=/path/to/cert.pem --set-file deployment.saas.ingress.localhost.tls.key=/path/to/key.pem --dry-run"
 				result := &executor.CommandResult{
 					ExitCode: 0,
 					Stdout:   "Release \"app-of-apps\" would be installed. Happy Helming!",

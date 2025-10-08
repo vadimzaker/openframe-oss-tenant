@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/flamingo/openframe/internal/cluster/models"
-	execPkg "github.com/flamingo/openframe/internal/shared/executor"
+	"flamingo.run/openframe-cli/internal/cluster/models"
+	execPkg "flamingo.run/openframe-cli/internal/shared/executor"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

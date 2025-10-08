@@ -1,0 +1,121 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+project_name: openframe-cli
+
+builds:
+  - id: openframe-cli
+    main: ./main.go
+    dir: ./cli
+    binary: openframe
+    hooks:
+      pre:
+      - cmd: go mod tidy
+        dir: ./cli
+      - cmd: go mod download
+        dir: ./cli
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X flamingo.run/openframe-cli/openframe-oss-tenant/cmd.version={{.Version}}
+      - -X flamingo.run/openframe-cli/openframe-oss-tenant/cmd.commit={{.Commit}}
+      - -X flamingo.run/openframe-cli/openframe-oss-tenant/cmd.date={{.Date}}
+
+archives:
+  - id: openframe-cli-archive
+    ids:
+      - openframe-cli
+    name_template: "openframe-cli_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: ["tar.gz"]
+    format_overrides:
+      - goos: windows
+        formats: ["zip"]
+    files:
+      - README.md
+    wrap_in_directory: false
+
+  # Separate archive for Rust client binaries
+  - id: rust-client-macos
+    name_template: 'openframe-client-macos'
+    formats: ["tar.gz"]
+    files:
+      - src: ../artifacts/openframe-macos/openframe
+        dst: openframe
+        strip_parent: true
+
+  - id: rust-client-windows
+    name_template: 'openframe-client-windows'
+    formats: ["zip"]
+    files:
+      - src: ../artifacts/openframe-windows/openframe.exe
+        dst: openframe.exe
+        strip_parent: true
+
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+changelog:
+  use: github-native
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^ci:'
+      - '^build:'
+      - '^style:'
+      - '^refactor:'
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: Bug fixes
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: flamingo-stack
+    name: openframe-oss-tenant
+  draft: false
+  prerelease: false
+  name_template: "Release {{.Version}}"
+  make_latest: true
+  header: |
+    ## OpenFrame Release {{.Version}}
+    
+    Built from commit: {{ .Commit }}
+    
+    ### 🐹 Go CLI Binaries
+    Cross-platform CLI tool for OpenFrame management.
+    
+    ### 🦀 Rust Client Binaries
+    - **macOS Universal** (ARM64 + x86_64): `openframe-client_macOS_universal.tar.gz`
+    - **Windows x64**: `openframe-client_windows_x64.zip`
+    
+    ### 📦 Installation
+    
+    **macOS:**
+    ```bash
+    curl -L https://github.com/flamingo-stack/openframe-oss-tenant/releases/download/{{.Version}}/openframe-client_macOS_universal.tar.gz | tar xz
+    chmod +x openframe
+    sudo mv openframe /usr/local/bin/
+    ```
+    
+    **Windows:**
+    Download `openframe-client_windows_x64.zip` and extract to your PATH.

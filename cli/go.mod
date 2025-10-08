@@ -1,4 +1,4 @@
-module github.com/flamingo/openframe
+module flamingo.run/openframe-cli
 
 go 1.23.0
 

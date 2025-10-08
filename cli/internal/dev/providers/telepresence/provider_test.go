@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/flamingo/openframe/internal/dev/models"
-	"github.com/flamingo/openframe/internal/shared/executor"
-	"github.com/flamingo/openframe/tests/testutil"
+	"flamingo.run/openframe-cli/internal/dev/models"
+	"flamingo.run/openframe-cli/internal/shared/executor"
+	"flamingo.run/openframe-cli/tests/testutil"
 	"github.com/stretchr/testify/assert"
 )
 

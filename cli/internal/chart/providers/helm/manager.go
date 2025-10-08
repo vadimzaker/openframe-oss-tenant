@@ -6,11 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/flamingo/openframe/internal/chart/models"
-	"github.com/flamingo/openframe/internal/chart/providers/argocd"
-	"github.com/flamingo/openframe/internal/chart/utils/config"
-	"github.com/flamingo/openframe/internal/chart/utils/errors"
-	"github.com/flamingo/openframe/internal/shared/executor"
+	"flamingo.run/openframe-cli/internal/chart/models"
+	"flamingo.run/openframe-cli/internal/chart/providers/argocd"
+	"flamingo.run/openframe-cli/internal/chart/utils/config"
+	"flamingo.run/openframe-cli/internal/chart/utils/errors"
+	"flamingo.run/openframe-cli/internal/shared/executor"
 	"github.com/pterm/pterm"
 )
 
@@ -250,8 +250,12 @@ func (h *HelmManager) InstallAppOfAppsFromLocal(ctx context.Context, config conf
 		if _, err := os.Stat(certFile); err == nil {
 			if _, err := os.Stat(keyFile); err == nil {
 				args = append(args,
+					// OSS mode certificates
 					"--set-file", fmt.Sprintf("deployment.oss.ingress.localhost.tls.cert=%s", certFile),
 					"--set-file", fmt.Sprintf("deployment.oss.ingress.localhost.tls.key=%s", keyFile),
+					// SaaS mode certificates
+					"--set-file", fmt.Sprintf("deployment.saas.ingress.localhost.tls.cert=%s", certFile),
+					"--set-file", fmt.Sprintf("deployment.saas.ingress.localhost.tls.key=%s", keyFile),
 				)
 			}
 		}

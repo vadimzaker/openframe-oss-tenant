@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/flamingo/openframe/internal/chart/utils/config"
-	"github.com/flamingo/openframe/internal/chart/utils/errors"
-	"github.com/flamingo/openframe/internal/shared/executor"
+	"flamingo.run/openframe-cli/internal/chart/utils/config"
+	"flamingo.run/openframe-cli/internal/chart/utils/errors"
+	"flamingo.run/openframe-cli/internal/shared/executor"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

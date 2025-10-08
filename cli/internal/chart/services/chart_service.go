@@ -9,20 +9,20 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/flamingo/openframe/internal/chart/prerequisites"
-	"github.com/flamingo/openframe/internal/chart/providers/git"
-	"github.com/flamingo/openframe/internal/chart/providers/helm"
-	chartUI "github.com/flamingo/openframe/internal/chart/ui"
-	"github.com/flamingo/openframe/internal/chart/ui/configuration"
-	"github.com/flamingo/openframe/internal/chart/ui/templates"
-	"github.com/flamingo/openframe/internal/chart/utils/config"
-	"github.com/flamingo/openframe/internal/chart/utils/errors"
-	"github.com/flamingo/openframe/internal/chart/utils/types"
-	utilTypes "github.com/flamingo/openframe/internal/chart/utils/types"
-	"github.com/flamingo/openframe/internal/cluster"
-	sharedErrors "github.com/flamingo/openframe/internal/shared/errors"
-	"github.com/flamingo/openframe/internal/shared/executor"
-	"github.com/flamingo/openframe/internal/shared/files"
+	"flamingo.run/openframe-cli/internal/chart/prerequisites"
+	"flamingo.run/openframe-cli/internal/chart/providers/git"
+	"flamingo.run/openframe-cli/internal/chart/providers/helm"
+	chartUI "flamingo.run/openframe-cli/internal/chart/ui"
+	"flamingo.run/openframe-cli/internal/chart/ui/configuration"
+	"flamingo.run/openframe-cli/internal/chart/ui/templates"
+	"flamingo.run/openframe-cli/internal/chart/utils/config"
+	"flamingo.run/openframe-cli/internal/chart/utils/errors"
+	"flamingo.run/openframe-cli/internal/chart/utils/types"
+	utilTypes "flamingo.run/openframe-cli/internal/chart/utils/types"
+	"flamingo.run/openframe-cli/internal/cluster"
+	sharedErrors "flamingo.run/openframe-cli/internal/shared/errors"
+	"flamingo.run/openframe-cli/internal/shared/executor"
+	"flamingo.run/openframe-cli/internal/shared/files"
 	"github.com/pterm/pterm"
 )
 
@@ -346,7 +346,6 @@ func (w *InstallationWorkflow) runPartialConfigurationWizard(deploymentModeStr s
 	wizard := configuration.NewConfigurationWizard()
 	return wizard.ConfigureHelmValuesWithMode(deploymentMode)
 }
-
 
 // waitForArgoCDSync waits for ArgoCD applications to be synced
 func (w *InstallationWorkflow) waitForArgoCDSync(ctx context.Context, config config.ChartInstallConfig) error {

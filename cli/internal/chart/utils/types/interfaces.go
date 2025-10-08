@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/flamingo/openframe/internal/chart/models"
-	"github.com/flamingo/openframe/internal/chart/providers/git"
-	"github.com/flamingo/openframe/internal/chart/utils/config"
-	clusterDomain "github.com/flamingo/openframe/internal/cluster/models"
+	"flamingo.run/openframe-cli/internal/chart/models"
+	"flamingo.run/openframe-cli/internal/chart/providers/git"
+	"flamingo.run/openframe-cli/internal/chart/utils/config"
+	clusterDomain "flamingo.run/openframe-cli/internal/cluster/models"
 )
 
 // Core Service Interfaces

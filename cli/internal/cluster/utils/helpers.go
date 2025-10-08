@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/flamingo/openframe/internal/cluster/models"
+	"flamingo.run/openframe-cli/internal/cluster/models"
 )
-
 
 // ClusterSelectionResult contains the result of cluster selection (deprecated - use UI types)
 type ClusterSelectionResult struct {

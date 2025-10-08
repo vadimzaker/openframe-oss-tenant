@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/flamingo/openframe/internal/cluster/models"
-	sharedUI "github.com/flamingo/openframe/internal/shared/ui"
+	"flamingo.run/openframe-cli/internal/cluster/models"
+	sharedUI "flamingo.run/openframe-cli/internal/shared/ui"
 	"github.com/pterm/pterm"
 )
 
@@ -102,7 +102,7 @@ func (s *Selector) SelectMultipleClusters(clusters []models.ClusterInfo, args []
 
 	defaults := make([]bool, len(clusterNames))
 	prompt := fmt.Sprintf("Select clusters for %s", s.operation)
-	
+
 	selected, err := sharedUI.GetMultiChoice(prompt, clusterNames, defaults)
 	if err != nil {
 		return nil, fmt.Errorf("cluster selection failed: %w", err)

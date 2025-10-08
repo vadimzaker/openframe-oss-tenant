@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	sharedUI "github.com/flamingo/openframe/internal/shared/ui"
+	sharedUI "flamingo.run/openframe-cli/internal/shared/ui"
 	"github.com/pterm/pterm"
 )
 

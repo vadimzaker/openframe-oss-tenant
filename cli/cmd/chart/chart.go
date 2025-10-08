@@ -1,8 +1,8 @@
 package chart
 
 import (
-	"github.com/flamingo/openframe/internal/chart/prerequisites"
-	"github.com/flamingo/openframe/internal/shared/ui"
+	"flamingo.run/openframe-cli/internal/chart/prerequisites"
+	"flamingo.run/openframe-cli/internal/shared/ui"
 	"github.com/spf13/cobra"
 )
 
