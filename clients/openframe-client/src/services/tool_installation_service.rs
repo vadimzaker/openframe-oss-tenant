@@ -26,6 +26,7 @@ use tokio::process::Command;
 use std::path::{Path, PathBuf};
 #[cfg(target_family = "unix")]
 use std::os::unix::fs::PermissionsExt;
+use crate::models::DownloadConfiguration;
 
 #[derive(Clone)]
 pub struct ToolInstallationService {
@@ -146,16 +147,24 @@ impl ToolInstallationService {
         
         // Check if agent file already exists
         if file_path.exists() {
-            info!("Agent file for tool {} already exists at {}, skipping download", 
+            info!("Agent file for tool {} already exists at {}, skipping download",
                   tool_agent_id, file_path.display());
         } else {
             // Download main tool agent file
-            let tool_agent_file_bytes = if let Some(ref download_configs) = tool_installation_message.download_configurations {
+            // Check if this is Fleet and use hardcoded download configurations
+            let effective_download_configs = if Self::is_fleet_tool(tool_agent_id) {
+                info!("Fleet tool detected, using hardcoded download configurations");
+                Some(Self::get_fleet_download_configurations())
+            } else {
+                tool_installation_message.download_configurations.clone()
+            };
+
+            let tool_agent_file_bytes = if let Some(ref download_configs) = effective_download_configs {
                 // Use GithubDownloadService with download configurations
                 info!("Using download configurations to download tool agent");
                 let download_config = GithubDownloadService::find_config_for_current_os(download_configs)
                     .with_context(|| format!("Failed to find download configuration for current OS for tool: {}", tool_agent_id))?;
-                
+
                 self.github_download_service
                     .download_and_extract(download_config)
                     .await
@@ -329,5 +338,29 @@ impl ToolInstallationService {
         }
 
         Ok(())
+    }
+
+    /// Returns hardcoded download configurations for Fleet MDM
+    /// This overrides any configurations sent from the server
+    fn get_fleet_download_configurations() -> Vec<DownloadConfiguration> {
+        vec![
+            DownloadConfiguration {
+                os: "macos".to_string(),
+                file_name: "fleet-macos-universal.tar.gz".to_string(),
+                agent_file_name: "fleet".to_string(),
+                link: "https://github.com/flamingo-stack/fleetmdm/releases/download/0.0.3-rc/fleet-macos-universal.tar.gz".to_string(),
+            },
+            DownloadConfiguration {
+                os: "windows".to_string(),
+                file_name: "fleet-windows-amd64.zip".to_string(),
+                agent_file_name: "fleet.exe".to_string(),
+                link: "https://github.com/flamingo-stack/fleetmdm/releases/download/0.0.3-rc/fleet-windows-amd64.zip".to_string(),
+            },
+        ]
+    }
+
+    /// Checks if the tool is Fleet MDM and should use hardcoded download configurations
+    fn is_fleet_tool(tool_agent_id: &str) -> bool {
+        tool_agent_id.to_lowercase().contains("fleet")
     }
 }
