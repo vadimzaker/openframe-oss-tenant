@@ -174,15 +174,24 @@ impl Service {
 
     /// Install the service on the current platform
     pub async fn install(params: InstallConfigParams) -> Result<()> {
+        println!("[INSTALL] ========================================");
+        println!("[INSTALL] OpenFrame Client Installation Starting");
+        println!("[INSTALL] ========================================");
+        println!("[INSTALL] OS: {} / Arch: {}", std::env::consts::OS, std::env::consts::ARCH);
+
         // Check if we have admin privileges
+        println!("[INSTALL] Step 1/7: Checking admin privileges...");
         if !PermissionUtils::is_admin() {
+            println!("[INSTALL] FAILED: No admin privileges detected");
             error!("Service installation requires admin/root privileges");
             return Err(anyhow::anyhow!(
                 "Admin/root privileges required for service installation"
             ));
         }
+        println!("[INSTALL] OK: Running with admin privileges");
 
         if Self::is_installed() {
+            println!("[INSTALL] Existing installation detected, uninstalling first...");
             info!("Existing Installation Detected\n");
             info!("An existing OpenFrame installation was found\n");
             info!("To proceed with the new installation, the old version must be removed\n");
@@ -191,9 +200,11 @@ impl Service {
             let installed_binary_path = Self::get_install_location();
 
             if !installed_binary_path.exists() {
+                println!("[INSTALL] WARNING: Installed binary not found at: {}", installed_binary_path.display());
                 warn!("Installed binary not found at expected location: {}", installed_binary_path.display());
                 info!("Proceeding with installation anyway...");
             } else {
+                println!("[INSTALL] Launching uninstall: {}", installed_binary_path.display());
                 info!("Launching uninstall process: {}", installed_binary_path.display());
 
                 use tokio::process::Command;
@@ -205,58 +216,81 @@ impl Service {
                     .context("Failed to launch uninstall process")?;
 
                 if !status.success() {
+                    println!("[INSTALL] WARNING: Uninstall exited with code: {:?}", status.code());
                     warn!("Uninstall process returned non-zero exit code: {:?}", status.code());
                     info!("Continuing with installation anyway...");
                 } else {
+                    println!("[INSTALL] OK: Previous installation uninstalled");
                     info!("Uninstall process completed successfully");
                 }
 
                 // Wait additional time for cleanup script to complete
+                println!("[INSTALL] Waiting 3s for cleanup to complete...");
                 info!("Waiting for cleanup to complete...");
                 tokio::time::sleep(std::time::Duration::from_secs(3)).await;
             }
 
+            println!("[INSTALL] Continuing with new installation...");
             info!("Continuing with new installation...\n");
         }
 
+        println!("[INSTALL] Step 2/7: Creating directories...");
         info!("Installing OpenFrame service");
         let dir_manager = DirectoryManager::new();
-        dir_manager
-            .perform_health_check()
-            .map_err(|e| anyhow::anyhow!("Directory health check failed: {}", e))?;
+        println!("[INSTALL]   Logs dir:        {}", dir_manager.logs_dir().display());
+        println!("[INSTALL]   App support dir:  {}", dir_manager.app_support_dir().display());
+        println!("[INSTALL]   Secured dir:      {}", dir_manager.secured_dir().display());
+
+        match dir_manager.perform_health_check() {
+            Ok(_) => println!("[INSTALL] OK: Directories created and verified"),
+            Err(e) => {
+                println!("[INSTALL] FAILED: Directory health check failed: {}", e);
+                return Err(anyhow::anyhow!("Directory health check failed: {}", e));
+            }
+        }
 
         // Build and persist initial configuration before registering OS service
+        println!("[INSTALL] Step 3/7: Saving initial configuration...");
         let installation_initial_config_service = InstallationInitialConfigService::new(dir_manager.clone())
             .context("Failed to initialize InstallationInitialConfigService")?;
-        
+
         installation_initial_config_service
             .build_and_save(params)
             .context("Failed to process initial configuration during service installation")?;
+        println!("[INSTALL] OK: Configuration saved");
 
         // Get the current executable path
+        println!("[INSTALL] Step 4/7: Copying binary...");
         let current_exe_path = std::env::current_exe().context("Failed to get current executable path")?;
+        println!("[INSTALL]   Source: {}", current_exe_path.display());
 
         // Determine the standard installation location for the binary
         let install_path = Self::get_install_location();
-        
+        println!("[INSTALL]   Target: {}", install_path.display());
+
         // Copy the binary to the installation location if it's not already there
         if current_exe_path != install_path {
             info!("Installing OpenFrame binary to: {}", install_path.display());
-            
+
             // On Windows, create the OpenFrame application directory
             // On Unix, /usr/local/bin should already exist (system directory)
             #[cfg(target_os = "windows")]
             {
                 if let Some(parent) = install_path.parent() {
+                    println!("[INSTALL]   Creating directory: {}", parent.display());
                     std::fs::create_dir_all(parent)
                         .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
+                    println!("[INSTALL]   OK: Directory created");
                 }
             }
-            
+
             // Copy the binary
+            println!("[INSTALL]   Copying binary ({} bytes)...",
+                std::fs::metadata(&current_exe_path).map(|m| m.len()).unwrap_or(0));
             std::fs::copy(&current_exe_path, &install_path)
                 .with_context(|| format!("Failed to copy binary to {}", install_path.display()))?;
-            
+            println!("[INSTALL]   OK: Binary copied successfully");
+
             // Set executable permissions on Unix
             #[cfg(unix)]
             {
@@ -266,26 +300,40 @@ impl Service {
                 std::fs::set_permissions(&install_path, perms)
                     .with_context(|| format!("Failed to set executable permissions on {}", install_path.display()))?;
             }
-            
+
             info!("Binary installed successfully. You can now use 'openframe' command from anywhere.");
-            
+
             // Windows: добавляем bin директорию в PATH
             #[cfg(target_os = "windows")]
             {
                 if let Some(bin_dir) = install_path.parent() {
+                    println!("[INSTALL] Step 5/7: Adding to system PATH...");
+                    println!("[INSTALL]   Adding: {}", bin_dir.display());
                     info!("Adding {} to system PATH", bin_dir.display());
                     Self::add_to_windows_path(bin_dir)
                         .context("Failed to add to PATH")?;
-                    
-                    info!("⚠️  Please restart your terminal to use 'openframe-client' command");
+                    println!("[INSTALL]   OK: Added to PATH");
+
+                    info!("Please restart your terminal to use 'openframe-client' command");
                 }
             }
+
+            // Verify the copied binary exists
+            if install_path.exists() {
+                let size = std::fs::metadata(&install_path).map(|m| m.len()).unwrap_or(0);
+                println!("[INSTALL]   Verified: binary exists at target ({} bytes)", size);
+            } else {
+                println!("[INSTALL]   WARNING: Binary NOT found at target after copy!");
+            }
         } else {
+            println!("[INSTALL]   Binary is already at the install location");
             info!("Binary is already in the standard location: {}", install_path.display());
         }
-        
+
         // Use the installation path for the service registration
         let exec_path = install_path;
+
+        println!("[INSTALL] Step 6/7: Registering system service...");
 
         // Determine platform-specific user and group values
         let (user_name, group_name) = match std::env::consts::OS {
@@ -294,6 +342,10 @@ impl Service {
             "linux" => (Some("root".to_string()), Some("root".to_string())),
             _ => (None, None),
         };
+
+        println!("[INSTALL]   Service name:  {}", FULL_SERVICE_NAME);
+        println!("[INSTALL]   Exec path:     {}", exec_path.display());
+        println!("[INSTALL]   User:          {}", user_name.as_deref().unwrap_or("default"));
 
         // Create a full configuration for the service with all enhanced options
         let config = ServiceConfig {
@@ -321,7 +373,18 @@ impl Service {
 
         // Call the cross-platform service manager to install
         service.install().context("Failed to install service")?;
+        println!("[INSTALL] OK: Service registered");
 
+        println!("[INSTALL] Step 7/7: Verifying installation...");
+        if Self::is_installed() {
+            println!("[INSTALL] OK: Service is installed and visible to OS");
+        } else {
+            println!("[INSTALL] WARNING: Service registration completed but service not detected");
+        }
+
+        println!("[INSTALL] ========================================");
+        println!("[INSTALL] Installation completed successfully!");
+        println!("[INSTALL] ========================================");
         info!("OpenFrame service installed successfully");
         Ok(())
     }

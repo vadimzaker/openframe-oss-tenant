@@ -90,8 +90,11 @@ impl From<PermissionError> for DirectoryError {
 pub fn get_app_support_directory() -> PathBuf {
     #[cfg(target_os = "windows")]
     {
-        let program_data =
-            std::env::var_os("ProgramData").expect("ProgramData environment variable not found");
+        let program_data = std::env::var_os("ProgramData").unwrap_or_else(|| {
+            eprintln!("[DIAG] WARNING: ProgramData environment variable not found, falling back to C:\\ProgramData");
+            std::ffi::OsString::from("C:\\ProgramData")
+        });
+        eprintln!("[DIAG] App support directory base: {:?}", program_data);
         let mut path = PathBuf::from(program_data);
         path.push("OpenFrame");
         path
@@ -132,8 +135,10 @@ pub fn get_logs_directory() -> PathBuf {
     // If no override, use platform-specific defaults
     #[cfg(target_os = "windows")]
     {
-        let program_data =
-            std::env::var_os("ProgramData").expect("ProgramData environment variable not found");
+        let program_data = std::env::var_os("ProgramData").unwrap_or_else(|| {
+            eprintln!("[DIAG] WARNING: ProgramData environment variable not found, falling back to C:\\ProgramData");
+            std::ffi::OsString::from("C:\\ProgramData")
+        });
         let mut path = PathBuf::from(program_data);
         path.push("OpenFrame");
         path.push("logs");
@@ -155,8 +160,10 @@ pub fn get_logs_directory() -> PathBuf {
 pub fn get_secured_directory() -> PathBuf {
     #[cfg(target_os = "windows")]
     {
-        let program_data =
-            std::env::var_os("ProgramData").expect("ProgramData environment variable not found");
+        let program_data = std::env::var_os("ProgramData").unwrap_or_else(|| {
+            eprintln!("[DIAG] WARNING: ProgramData environment variable not found, falling back to C:\\ProgramData");
+            std::ffi::OsString::from("C:\\ProgramData")
+        });
         let mut path = PathBuf::from(program_data);
         path.push("OpenFrame");
         path.push("secured");

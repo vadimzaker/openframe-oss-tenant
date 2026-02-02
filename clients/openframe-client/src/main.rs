@@ -94,8 +94,8 @@ fn main() -> Result<()> {
             // Check for admin privileges - this is required for installation
             if !is_admin {
                 error!("Admin/root privileges are required for service installation");
-                // We could attempt automatic elevation here, but for now we'll just exit with an error
                 eprintln!("Please run the installation with administrator/root privileges");
+                wait_for_keypress();
                 process::exit(1);
             }
 
@@ -110,10 +110,13 @@ fn main() -> Result<()> {
                 match Service::install(params).await {
                     Ok(_) => {
                         info!("OpenFrame client service installed successfully");
+                        wait_for_keypress();
                         process::exit(0);
                     }
                     Err(e) => {
+                        eprintln!("\n[INSTALL] FAILED: {:#}", e);
                         error!("Failed to install OpenFrame client service: {:#}", e);
+                        wait_for_keypress();
                         process::exit(1);
                     }
                 }
@@ -133,10 +136,13 @@ fn main() -> Result<()> {
                 match Service::uninstall().await {
                     Ok(_) => {
                         info!("OpenFrame client service uninstalled successfully");
+                        wait_for_keypress();
                         process::exit(0);
                     }
                     Err(e) => {
+                        eprintln!("\n[UNINSTALL] FAILED: {:#}", e);
                         error!("Failed to uninstall OpenFrame client service: {:#}", e);
+                        wait_for_keypress();
                         process::exit(1);
                     }
                 }
@@ -218,6 +224,13 @@ fn main() -> Result<()> {
     info!("OpenFrame agent shutting down");
 
     Ok(())
+}
+
+/// Wait for the user to press Enter before closing the console window.
+/// This prevents the PowerShell/CMD window from closing immediately after install/uninstall.
+fn wait_for_keypress() {
+    println!("\nPress Enter to close this window...");
+    let _ = std::io::stdin().read_line(&mut String::new());
 }
 
 /// Check for capabilities and log warnings if we don't have them
