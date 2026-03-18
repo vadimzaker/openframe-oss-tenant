@@ -31,7 +31,7 @@ impl GithubDownloadService {
 
         // Download the archive with retry
         let archive_bytes = self.download_with_retry(&config.link).await
-            .with_context(|| format!("Failed to download from: {}", config.link))?;
+            .with_context(|| format!("Failed to download from: {}", &config.link))?;
 
         info!("Downloaded {} bytes", archive_bytes.len());
 
@@ -295,7 +295,7 @@ impl GithubDownloadService {
         info!("Downloading archive from: {}", config.link);
 
         let archive_bytes = self.download_with_retry(&config.link).await
-            .with_context(|| format!("Failed to download from: {}", config.link))?;
+            .with_context(|| format!("Failed to download from: {}", &config.link))?;
 
         info!("Downloaded {} bytes", archive_bytes.len());
 

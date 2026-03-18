@@ -43,7 +43,7 @@ impl DownloadConfiguration {
         } else {
             return false;
         };
-        
+
         self.os.eq_ignore_ascii_case(current_os)
     }
 }

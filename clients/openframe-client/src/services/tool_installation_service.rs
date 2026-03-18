@@ -251,8 +251,7 @@ impl ToolInstallationService {
                 if is_executable {
                     if let Some(ref version) = asset.version {
                         info!("Publishing installed asset message for: {} v{}", asset.id, version);
-                        let machine_id = self.config_service.get_machine_id().await
-                            .with_context(|| format!("Failed to get machine_id for asset publish: {}", asset.id))?;
+                        let machine_id = self.config_service.get_machine_id().await?;
                         self.installed_agent_publisher
                             .publish(machine_id, asset.id.clone(), version.clone())
                             .await
@@ -330,20 +329,13 @@ impl ToolInstallationService {
 
         // Publish installed agent message
         info!("Publishing installed agent message for tool: {}", tool_agent_id);
-        match self.config_service.get_machine_id().await {
-            Ok(machine_id) => {
-                if let Err(e) = self.installed_agent_publisher
-                    .publish(machine_id, tool_agent_id.clone(), version_clone.clone())
-                    .await
-                {
-                    warn!("Failed to publish installed agent message for {}: {:#}", tool_agent_id, e);
-                    // Don't fail installation if publishing fails
-                }
-            }
-            Err(e) => {
-                warn!("Failed to get machine_id for installed agent message: {:#}", e);
-                // Don't fail installation if publishing fails
-            }
+        let machine_id = self.config_service.get_machine_id().await?;
+        if let Err(e) = self.installed_agent_publisher
+            .publish(machine_id, tool_agent_id.clone(), version_clone.clone())
+            .await
+        {
+            warn!("Failed to publish installed agent message for {}: {:#}", tool_agent_id, e);
+            // Don't fail installation if publishing fails
         }
 
         Ok(())
