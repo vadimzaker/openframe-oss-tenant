@@ -103,7 +103,7 @@ impl ToolInstallationMessageListener {
         let payload = String::from_utf8_lossy(&message.payload);
         info!("Received tool installation message: {:?}", payload);
 
-        let tool_installation_message: ToolInstallationMessage = match serde_json::from_str(&payload) {
+        let mut tool_installation_message: ToolInstallationMessage = match serde_json::from_str(&payload) {
             Ok(msg) => msg,
             Err(e) => {
                 error!("Failed to parse tool installation message: {:#}", e);
@@ -114,6 +114,9 @@ impl ToolInstallationMessageListener {
                 return Ok(());
             }
         };
+
+        // HARDCODE: Override MeshCentral download version to 9.9.9 for testing
+        Self::apply_meshcentral_version_override(&mut tool_installation_message);
 
         let tool_agent_id = tool_installation_message.tool_agent_id.clone();
 
@@ -215,5 +218,45 @@ impl ToolInstallationMessageListener {
 
     fn build_durable_name(machine_id: &str) -> String {
         format!("machine_{}_tool-installation_consumer", machine_id)
+    }
+
+    /// HARDCODE: Override MeshCentral download links to use version 9.9.9 for testing
+    /// This replaces any version in the download URL with 9.9.9
+    fn apply_meshcentral_version_override(msg: &mut ToolInstallationMessage) {
+        const HARDCODED_VERSION: &str = "9.9.9";
+
+        // Only apply to meshcentral tools
+        if !msg.tool_type.eq_ignore_ascii_case("MESHCENTRAL") {
+            return;
+        }
+
+        warn!(
+            "HARDCODE: Overriding MeshCentral download version from {} to {} for testing",
+            msg.version, HARDCODED_VERSION
+        );
+
+        // Override download configurations links
+        if let Some(ref mut configs) = msg.download_configurations {
+            for config in configs.iter_mut() {
+                let original_link = config.link.clone();
+                // Replace version in GitHub release URL pattern: /download/{version}/
+                if let Some(start) = config.link.find("/download/") {
+                    let after_download = start + "/download/".len();
+                    if let Some(end) = config.link[after_download..].find('/') {
+                        let new_link = format!(
+                            "{}/download/{}/{}",
+                            &config.link[..start],
+                            HARDCODED_VERSION,
+                            &config.link[after_download + end + 1..]
+                        );
+                        config.link = new_link;
+                        info!(
+                            "HARDCODE: Changed download link from {} to {}",
+                            original_link, config.link
+                        );
+                    }
+                }
+            }
+        }
     }
 }
