@@ -1,5 +1,5 @@
-import { buildNatsWsUrl, useNatsDialogSubscription } from '@flamingo-stack/openframe-frontend-core';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNatsBridgeLiveness } from '../services/natsTauri';
 import { supportedModelsService } from '../services/supportedModelsService';
 import { tokenService } from '../services/tokenService';
 import { log, maskToken } from '../utils/log';
@@ -148,12 +148,7 @@ export function useConnectionStatus(): UseConnectionStatusReturn {
       setStatus('connecting');
       return;
     }
-
-    if (isConnected) {
-      setStatus('connected');
-    } else {
-      setStatus('disconnected');
-    }
+    setStatus(isConnected ? 'connected' : 'disconnected');
   }, [isConnected, apiBaseUrl, token]);
 
   const displayUrl = serverUrl?.replace(/^https?:\/\//, '') || null;

@@ -17,6 +17,12 @@ import faeAvatar from '../assets/fae-avatar.png';
 import { useDebugMode } from '../contexts/DebugModeContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagsContext';
 import { ChatApiService } from '../services/chatApiService';
+import {
+  type NatsEvent,
+  useNatsBridgeEvents,
+  useNatsBridgeLiveness,
+  useNatsBridgeTrackDialogs,
+} from '../services/natsTauri';
 import { tokenService } from '../services/tokenService';
 import { overrideToolTitle } from '../utils/applyToolTitle';
 import { log, maskToken } from '../utils/log';
@@ -38,7 +44,13 @@ interface UseChatOptions {
   onDialogClosed?: () => void;
 }
 
-export function useChat({ useApi = true, useNats = false, onMetadataUpdate, onTokenUsage, onDialogClosed }: UseChatOptions = {}) {
+export function useChat({
+  useApi = true,
+  useNats = false,
+  onMetadataUpdate,
+  onTokenUsage,
+  onDialogClosed,
+}: UseChatOptions = {}) {
   const { flags } = useFeatureFlags();
   const [useJetstream] = useState(() => !!flags['ai-streaming-jetstream']);
 
@@ -49,8 +61,6 @@ export function useChat({ useApi = true, useNats = false, onMetadataUpdate, onTo
   const [error, setError] = useState<string | null>(null);
   const [isResumedDialog, setIsResumedDialog] = useState(false);
   const [isTicketPreview, setIsTicketPreview] = useState(false);
-  const [token, setToken] = useState(tokenService.getCurrentToken());
-  const [apiBaseUrl, setApiBaseUrl] = useState(tokenService.getCurrentApiBaseUrl());
 
   // Refs for stream management
   const natsDoneResolverRef = useRef<null | (() => void)>(null);
@@ -65,14 +75,6 @@ export function useChat({ useApi = true, useNats = false, onMetadataUpdate, onTo
 
   const { debugMode } = useDebugMode();
   const { quickActions } = useChatConfig();
-
-  useEffect(() => {
-    return tokenService.onTokenUpdate(setToken);
-  }, []);
-
-  useEffect(() => {
-    return tokenService.onApiUrlUpdate(setApiBaseUrl);
-  }, []);
 
   const apiServiceRef = useRef<ChatApiService | null>(null);
   if (!apiServiceRef.current) {
