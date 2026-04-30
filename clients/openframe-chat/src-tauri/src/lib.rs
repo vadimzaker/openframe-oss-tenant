@@ -123,6 +123,11 @@ async fn nats_status(bridge: State<'_, NatsBridge>) -> Result<NatsStatus, String
 }
 
 #[tauri::command]
+fn nats_unread_count(bridge: State<'_, NatsBridge>) -> u32 {
+    bridge.unread_count()
+}
+
+#[tauri::command]
 async fn nats_set_tracked_dialogs(
     bridge: State<'_, NatsBridge>,
     dialog_ids: Vec<String>,
@@ -500,6 +505,7 @@ pub fn run() {
             get_server_url,
             get_debug_mode,
             nats_status,
+            nats_unread_count,
             nats_set_tracked_dialogs,
             nats_register_event_channel,
             nats_unregister_event_channel,
