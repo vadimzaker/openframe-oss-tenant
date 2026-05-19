@@ -177,7 +177,7 @@ fn register_app_id() {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    println!("[INFO] OpenFrame Chat starting...");
+    println!("[startup] openframe-chat starting (version {})", env!("CARGO_PKG_VERSION"));
 
     // Read configuration from CFPreferences (written by openframe-client daemon)
     let config = config_reader::AppConfig::from_preferences();
