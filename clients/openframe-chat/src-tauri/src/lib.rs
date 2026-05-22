@@ -545,12 +545,12 @@ pub fn run() {
                 _ => {}
             }
         })
-        .invoke_handler(tauri::generate_handler![greet, get_token, get_server_url, get_debug_mode, log_from_js]);
         .invoke_handler(tauri::generate_handler![
             greet,
             get_token,
             get_server_url,
             get_debug_mode,
+            log_from_js,
             nats_status,
             nats_unread_count,
             nats_set_tracked_dialogs,
