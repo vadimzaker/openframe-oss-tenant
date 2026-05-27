@@ -25,12 +25,20 @@ tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-log = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+tauri-plugin-notification = "2"
 aes-gcm = "0.10"
 base64 = "0.21"
 notify = "6.1"
+async-nats = { git = "https://github.com/flamingo-stack/nats.rs.git", branch = "main", features = ["websockets"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
+futures = "0.3"
+uuid = { version = "1", features = ["v4"] }
+tracing = "0.1"
+rand = "0.8"
 
 [target.'cfg(windows)'.dependencies]
 dirs = "5"
+winreg = "0.52"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6.4"

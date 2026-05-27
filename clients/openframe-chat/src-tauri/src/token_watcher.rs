@@ -19,7 +19,8 @@ pub struct TokenWatcher {
     app_handle: AppHandle,
 }
 
-/// Tauri state to share the current token with commands
+/// Tauri state to share the current token with commands.
+#[derive(Clone)]
 pub struct TokenState {
     pub current_token: Arc<Mutex<Option<String>>>,
 }
@@ -38,12 +39,12 @@ impl TokenWatcher {
                 };
             }
         };
-        
+
         let current_token = Arc::new(Mutex::new(None));
         let token_state = TokenState {
             current_token: current_token.clone(),
         };
-        
+
         let watcher = Self {
             token_file_path: PathBuf::from(token_path),
             current_token,
