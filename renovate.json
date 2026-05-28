@@ -8,6 +8,7 @@
   "semanticCommits": "enabled",
   "timezone": "UTC",
   "commitMessagePrefix": "chore(deps):",
+  "suppressNotifications": ["dependencyLookupWarnings"],
 
   "packageRules": [
     {
