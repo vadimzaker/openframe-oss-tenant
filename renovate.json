@@ -71,7 +71,7 @@
       "prPriority": 10,
       "enabled": true,
       "ignoreUnstable": true,
-      "ignoreVersions": ["9.9.9", "/^9\\./"]
+      "allowedVersions": "!/^9\\./"
     },
     {
       "description": "Updates for fleetm Helm chart",
@@ -87,7 +87,7 @@
       "prPriority": 10,
       "enabled": true,
       "ignoreUnstable": true,
-      "ignoreVersions": ["9.9.9", "/^9\\./"]
+      "allowedVersions": "!/^9\\./"
     },
     {
       "description": "Only update fleetmdm chart",
