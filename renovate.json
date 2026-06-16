@@ -1,194 +1,214 @@
-  {
-    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "enabledManagers": ["maven", "helmv3", "regex"],
-    "labels": ["dependencies"],
-    "prConcurrentLimit": 3,
-    "prCreation": "immediate",
-    "rangeStrategy": "replace",
-    "semanticCommits": "enabled",
-    "timezone": "UTC",
-    "commitMessagePrefix": "chore(deps):",
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabledManagers": ["maven", "npm", "helmv3", "regex", "cargo"],
+  "labels": ["dependencies", "openframe-libs"],
+  "prConcurrentLimit": 3,
+  "prCreation": "immediate",
+  "rangeStrategy": "replace",
+  "semanticCommits": "enabled",
+  "timezone": "UTC",
+  "commitMessageAction": "",
+  "commitMessageExtra": "to {{{newVersion}}}",
+  "commitMessagePrefix": "chore(deps):",
 
-    "packageRules": [
-      {
-        "description": "Updates for OpenFrame OSS libs",
-        "matchManagers": ["maven"],
-        "matchPackagePatterns": ["^com\\.openframe\\.oss"],
-        "groupName": "openframe-oss-libs",
-        "groupSlug": "openframe-oss-libs",
-        "commitMessageTopic": "OpenFrame OSS libs",
-        "semanticCommitType": "chore",
-        "semanticCommitScope": "deps",
-        "automergeType": "pr",
-        "automergeStrategy": "squash",
-        "labels": ["dependencies", "openframe-oss-libs"],
-        "prPriority": 10,
-        "enabled": true
-      },
-      {
-        "description": "Updates for OpenFrame SaaS libs",
-        "matchManagers": ["maven"],
-        "matchPackagePatterns": ["^com\\.openframe\\.saas"],
-        "groupName": "openframe-saas-libs",
-        "groupSlug": "openframe-saas-libs",
-        "commitMessageTopic": "OpenFrame SaaS libs",
-        "semanticCommitType": "chore",
-        "semanticCommitScope": "deps",
-        "automergeType": "pr",
-        "automergeStrategy": "squash",
-        "labels": ["dependencies", "openframe-saas-libs"],
-        "prPriority": 10,
-        "enabled": true
-      },
-      {
-        "description": "Ignore parent POM, prevent lookup errors",
-        "matchPackageNames": ["com.openframe:openframe-parent"],
-        "enabled": false
-      },
-      {
-        "description": "Disable all other dependencies",
-        "matchManagers": ["maven"],
-        "matchPackagePatterns": ["*"],
-        "excludePackagePatterns": ["^com\\.openframe\\.oss", "^com\\.openframe\\.saas"],
-        "enabled": false
-      },
-      {
-        "description": "fleetm Docker image STAGE",
-        "matchManagers": ["regex"],
-        "matchPackageNames": ["ghcr.io/flamingo-stack/fleetmdm/fleet"],
-        "matchFileNames": ["**/values-stage.yaml"],
-        "groupName": "fleetmdm-image-stage",
-        "groupSlug": "fleetmdm-image-stage",
-        "additionalBranchPrefix": "stage/",
-        "commitMessageTopic": "fleetmdm image (stage)",
-        "semanticCommitType": "chore",
-        "semanticCommitScope": "deps",
-        "labels": ["dependencies", "fleetmdm", "stage"],
-        "prPriority": 10,
-        "enabled": true,
-        "ignoreUnstable": true,
-        "allowedVersions": "!/^9\\./",
-        "separateMajorMinor": false
-      },
-      {
-        "description": "fleetm Docker image — PROD",
-        "matchManagers": ["regex"],
-        "matchPackageNames": ["ghcr.io/flamingo-stack/fleetmdm/fleet"],
-        "matchFileNames": ["**/values-prod.yaml"],
-        "groupName": "fleetmdm-image-prod",
-        "groupSlug": "fleetmdm-image-prod",
-        "additionalBranchPrefix": "prod/",
-        "commitMessageTopic": "fleetmdm image (prod)",
-        "semanticCommitType": "chore",
-        "semanticCommitScope": "deps",
-        "labels": ["dependencies", "fleetmdm", "prod"],
-        "prPriority": 5,
-        "enabled": true,
-        "ignoreUnstable": true,
-        "allowedVersions": "!/^9\\./",
-        "separateMajorMinor": false
-      },
-      {
-        "description": "Updates for fleetm  Helm chart",
-        "matchManagers": ["helmv3"],
-        "matchPackageNames": ["fleet"],
-        "matchSourceUrls": ["oci://ghcr.io/flamingo-stack/fleetmdm/helm-charts"],
-        "groupName": "fleetmdm-helm-chart",
-        "groupSlug": "fleetmdm-helm-chart",
-        "commitMessageTopic": "fleetmdm Helm chart",
-        "semanticCommitType": "chore",
-        "semanticCommitScope": "deps",
-        "labels": ["dependencies", "fleetmdm"],
-        "prPriority": 10,
-        "enabled": true,
-        "ignoreUnstable": true,
-        "allowedVersions": "!/^9\\./",
-        "separateMajorMinor": false
-      },
-      {
-        "description": "only update helm fleetm chart",
-        "matchManagers": ["helmv3"],
-        "matchPackagePatterns": ["*"],
-        "excludePackageNames": ["fleet"],
-        "enabled": false
-      }
-    ],
-
-    "regexManagers": [
-      {
-        "description": "STAGE: track fleetmdm image tag against the registry",
-        "fileMatch": [
-          "^manifests/integrated-tools/fleet/values-stage\\.yaml$",
-          "^manifests/tenant/values-stage\\.yaml$"
-        ],
-        "matchStrings": [
-          "imageTag:\\s*[\"']?(?<currentValue>[^\\s\"']+)[\"']?"
-        ],
-        "depNameTemplate": "ghcr.io/flamingo-stack/fleetmdm/fleet",
-        "datasourceTemplate": "docker"
-      },
-      {
-        "description": "PROD (fleet chart): promote the imageTag already merged into values-stage.yaml on main",
-        "fileMatch": [
-          "^manifests/integrated-tools/fleet/values-prod\\.yaml$"
-        ],
-        "matchStrings": [
-          "imageTag:\\s*[\"']?(?<currentValue>[^\\s\"']+)[\"']?"
-        ],
-        "depNameTemplate": "ghcr.io/flamingo-stack/fleetmdm/fleet",
-        "datasourceTemplate": "custom.fleetStage",
-        "registryUrlTemplate": "https://raw.githubusercontent.com/flamingo-stack/openframe-saas-tenant/main/manifests/integrated-tools/fleet/values-stage.yaml"
-      },
-      {
-        "description": "PROD (tenant chart): promote the imageTag already merged into values-stage.yaml on main",
-        "fileMatch": [
-          "^manifests/tenant/values-prod\\.yaml$"
-        ],
-        "matchStrings": [
-          "imageTag:\\s*[\"']?(?<currentValue>[^\\s\"']+)[\"']?"
-        ],
-        "depNameTemplate": "ghcr.io/flamingo-stack/fleetmdm/fleet",
-        "datasourceTemplate": "custom.fleetStage",
-        "registryUrlTemplate": "https://raw.githubusercontent.com/flamingo-stack/openframe-saas-tenant/main/manifests/tenant/values-stage.yaml"
-      }
-    ],
-
-    "customDatasources": {
-      "fleetStage": {
-        "format": "yaml",
-        "transformTemplates": [
-          "{ \"releases\": [ { \"version\": $string(fleet.imageTag) } ] }"
-        ]
-      }
+  "packageRules": [
+    {
+      "description": "Updates for OpenFrame OSS libs property",
+      "matchManagers": ["maven"],
+      "matchPackagePatterns": ["^com\\.openframe\\.oss"],
+      "groupName": "openframe-libs",
+      "groupSlug": "openframe-libs",
+      "commitMessageTopic": "OpenFrame libs",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "labels": ["dependencies", "openframe-libs"],
+      "prPriority": 10,
+      "enabled": true,
+      "ignoreUnstable": true
     },
-
-    "maven": {
-      "enabled": true
+    {
+      "description": "Ignore parent POM, prevent lookup errors",
+      "matchPackageNames": ["com.openframe:openframe-parent"],
+      "enabled": false
     },
-
-    "hostRules": [
-      {
-        "hostType": "maven",
-        "matchHost": "maven.pkg.github.com",
-        "description": "GitHub Packages Maven registry"
-      },
-      {
-        "hostType": "maven",
-        "matchHost": "maven.pkg.github.com/flamingo-stack/openframe-oss-lib",
-        "description": "Specific registry for com.openframe.oss artifacts"
-      },
-      {
-        "hostType": "maven",
-        "matchHost": "maven.pkg.github.com/flamingo-stack/openframe-saas-lib",
-        "description": "Specific registry for com.openframe.saas artifacts"
-      },
-      {
-        "matchHost": "raw.githubusercontent.com",
-        "description": "Allow custom datasource to read values-stage.yaml from the private repo on main"
-      }
-    ],
-
-    "registryAliases": {
-      "github-packages": "https://maven.pkg.github.com"
+    {
+      "description": "Disable all other dependencies - only update openframe libs",
+      "matchManagers": ["maven"],
+      "matchPackageNames": ["!/^com\\.openframe\\.oss/"],
+      "enabled": false
+    },
+    {
+      "description": "Updates for OpenFrame frontend core npm package",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["@flamingo-stack/openframe-frontend-core"],
+      "groupName": "openframe-frontend-core",
+      "groupSlug": "openframe-frontend-core",
+      "commitMessageTopic": "OpenFrame frontend core",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "labels": ["dependencies", "openframe-libs"],
+      "prPriority": 10,
+      "enabled": true,
+      "ignoreUnstable": true
+    },
+    {
+      "description": "Disable all other npm dependencies - only update openframe-frontend-core",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["!@flamingo-stack/openframe-frontend-core"],
+      "enabled": false
+    },
+    {
+      "description": "Updates for fleetm Docker image",
+      "matchManagers": ["regex"],
+      "matchPackageNames": ["ghcr.io/flamingo-stack/fleetmdm/fleet"],
+      "groupName": "FleetMDM",
+      "groupSlug": "fleetmdm-image",
+      "commitMessageTopic": "FleetMDM",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "labels": ["dependencies", "fleetmdm"],
+      "prPriority": 10,
+      "enabled": true,
+      "ignoreUnstable": true,
+      "allowedVersions": "!/^9\\.9\\.9$/",
+      "separateMajorMinor": false
+    },
+    {
+      "description": "Updates for meshcentral Docker image",
+      "matchManagers": ["regex"],
+      "matchPackageNames": ["ghcr.io/flamingo-stack/meshcentral/meshcentral"],
+      "groupName": "MeshCentral",
+      "groupSlug": "meshcentral-image",
+      "commitMessageTopic": "MeshCentral",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "labels": ["dependencies", "meshcentral"],
+      "prPriority": 10,
+      "enabled": true,
+      "ignoreUnstable": true,
+      "separateMajorMinor": false
+    },
+    {
+      "description": "Updates for tacticalrmm Docker images",
+      "matchManagers": ["regex"],
+      "matchPackageNames": [
+        "ghcr.io/flamingo-stack/tacticalrmm/tactical",
+        "ghcr.io/flamingo-stack/tactical-frontend/tactical-frontend"
+      ],
+      "groupName": "TacticalRMM",
+      "groupSlug": "tacticalrmm-image",
+      "commitMessageTopic": "TacticalRMM",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "labels": ["dependencies", "tacticalrmm"],
+      "prPriority": 10,
+      "enabled": true,
+      "ignoreUnstable": true,
+      "separateMajorMinor": false
+    },
+    {
+      "description": "Updates for fleetm Helm chart",
+      "matchManagers": ["helmv3"],
+      "matchPackageNames": ["fleet"],
+      "matchSourceUrls": ["oci://ghcr.io/flamingo-stack/fleetmdm/helm-charts"],
+      "groupName": "FleetMDM Helm chart",
+      "groupSlug": "fleetmdm-helm-chart",
+      "commitMessageTopic": "FleetMDM Helm chart",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "labels": ["dependencies", "fleetmdm"],
+      "prPriority": 10,
+      "enabled": true,
+      "ignoreUnstable": true,
+      "allowedVersions": "!/^9\\.9\\.9$/",
+      "separateMajorMinor": false
+    },
+    {
+      "description": "Only update fleetmdm chart",
+      "matchManagers": ["helmv3"],
+      "matchPackageNames": ["!fleet"],
+      "enabled": false
+    },
+    {
+      "description": "Track ALL deps for openframe-client (Rust/cargo) — one grouped PR",
+      "matchFileNames": ["clients/openframe-client/**"],
+      "enabled": true,
+      "groupName": "openframe-client deps",
+      "groupSlug": "openframe-client-deps",
+      "commitMessageTopic": "openframe-client deps",
+      "labels": ["dependencies", "clients", "openframe-client"]
+    },
+    {
+      "description": "Track ALL deps for openframe-chat (npm + Tauri/cargo) — one grouped PR",
+      "matchFileNames": ["clients/openframe-chat/**"],
+      "enabled": true,
+      "groupName": "openframe-chat deps",
+      "groupSlug": "openframe-chat-deps",
+      "commitMessageTopic": "openframe-chat deps",
+      "labels": ["dependencies", "clients", "openframe-chat"]
     }
+  ],
+
+  "regexManagers": [
+    {
+      "description": "Track fleetmdm image tag in the fleet chart values.yaml",
+      "fileMatch": [
+        "^manifests/integrated-tools/fleet/values\\.yaml$"
+      ],
+      "matchStrings": [
+        "imageTag:\\s*[\"']?(?<currentValue>[^\\s\"']+)[\"']?"
+      ],
+      "depNameTemplate": "ghcr.io/flamingo-stack/fleetmdm/fleet",
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Track meshcentral image tag",
+      "fileMatch": [
+        "^manifests/integrated-tools/meshcentral/values\\.yaml$"
+      ],
+      "matchStrings": [
+        "repository: meshcentral\\s+tag:\\s*[\"']?(?<currentValue>[^\\s\"']+)[\"']?"
+      ],
+      "depNameTemplate": "ghcr.io/flamingo-stack/meshcentral/meshcentral",
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Track tactical-base image tag",
+      "fileMatch": [
+        "^manifests/integrated-tools/tactical-rmm/values\\.yaml$"
+      ],
+      "matchStrings": [
+        "repository: tactical\\s+tag:\\s*[\"']?(?<currentValue>[^\\s\"']+)[\"']?"
+      ],
+      "depNameTemplate": "ghcr.io/flamingo-stack/tacticalrmm/tactical",
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Track tactical-frontend image tag",
+      "fileMatch": [
+        "^manifests/integrated-tools/tactical-rmm/values\\.yaml$"
+      ],
+      "matchStrings": [
+        "repository: tactical-frontend\\s+tag:\\s*[\"']?(?<currentValue>[^\\s\"']+)[\"']?"
+      ],
+      "depNameTemplate": "ghcr.io/flamingo-stack/tactical-frontend/tactical-frontend",
+      "datasourceTemplate": "docker"
+    }
+  ],
+
+  "maven": {
+    "enabled": true
+  },
+
+  "hostRules": [
+    {
+      "hostType": "maven",
+      "matchHost": "maven.pkg.github.com",
+      "description": "GitHub Packages Maven registry"
+    }
+  ],
+
+  "registryAliases": {
+    "github-packages": "https://maven.pkg.github.com"
   }
+}
